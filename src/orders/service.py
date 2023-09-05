@@ -12,7 +12,7 @@ from starlette import status
 from models import User, Product, DeliveryInfo, Order, OrderItem, OrderStatus
 from .schemas import OrderCreate, Status, OrderUpdate
 
-from auth.service import get_token_data, verify_rw
+from user.service import get_token_data, verify_rw
 
 from typing import Mapping, Sequence
 from db_config import get_session

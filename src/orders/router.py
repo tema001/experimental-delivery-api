@@ -5,7 +5,7 @@ from . import service
 from .schemas import OrderResponse, Status
 from .utils import check_new_events
 from exceptions import OrderNotFoundException, OrderStatusTransitionError
-from auth.service import verify_rw
+from user.service import verify_rw
 
 from typing import Mapping
 
