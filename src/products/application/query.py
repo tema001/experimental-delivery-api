@@ -8,7 +8,7 @@ from products.infra.repository import ProductRepository
 
 class ProductQuery:
 
-    def __init__(self, repo: ProductRepository = Depends(ProductRepository)):
+    def __init__(self, repo: ProductRepository = Depends()):
         self.repo = repo
 
     async def get_product(self, product_id: int) -> ProductEntity:

@@ -1,20 +1,18 @@
-from datetime import datetime
-
 from pydantic import BaseModel
+from uuid import UUID
 
 
-class OrderItemResponse(BaseModel):
-    id: int
-    product_name: str
-    price: float
+class OrderItemReq(BaseModel):
+    id: UUID
     quantity: int
 
 
-class OrderResponse(BaseModel):
-    id: int
+class OrderReq(BaseModel):
     customer_name: str
-    items: list[OrderItemResponse]
+    items: list[OrderItemReq]
     address: str
-    status: str
-    timestampz: datetime
-    total_price: float
+
+
+class OrderUpdate(BaseModel):
+    items: list[OrderItemReq] | None
+    address: str | None

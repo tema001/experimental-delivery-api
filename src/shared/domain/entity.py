@@ -1,9 +1,16 @@
 from dataclasses import dataclass
+import uuid
+
+
+class EntityId:
+    @classmethod
+    def next_id(cls):
+        return uuid.uuid4()
 
 
 @dataclass
 class Entity:
-    id: int
+    id: EntityId
 
     def __eq__(self, other):
         if isinstance(other, type(self)):

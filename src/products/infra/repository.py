@@ -39,6 +39,14 @@ class ProductRepository(GenericRepository):
             return res
         return self.map_model_to_entity(res)
 
+    async def get_many_by_ids(self, _ids: Sequence[int]) -> Sequence:
+        stmt = select(Product.id, Product.product_name, Product.price, Category.category_name) \
+            .join(Category).where(Product.id.in_(_ids))
+        res = await self._db.execute(stmt)
+        res = res.mappings().all()
+
+        return self.map_model_to_entity(res)
+
     async def get_products_by_category_name(self, category_name: str) -> Sequence:
         category_id_stms = select(Category.id).where(Category.category_name == category_name).scalar_subquery()
         stmt = select(Product.id, Product.product_name, Product.price).where(Product.category_id == category_id_stms)
