@@ -13,7 +13,7 @@ crypt_context = CryptContext(['bcrypt'])
 def generate_jwt_token(input_password: str, user: UserEntity) -> str | None:
     if crypt_context.verify(input_password, user.password):
         data = {
-            'id': user.id,
+            'id': str(user.id),
             'username': user.username,
             'role': user.role.value
         }

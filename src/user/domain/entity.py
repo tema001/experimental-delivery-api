@@ -5,7 +5,8 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Role(Entity):
+class Role:
+    id: int
     value: RoleName
 
     @classmethod
@@ -27,10 +28,10 @@ class AuthorizedUserEntity(Entity):
     role: RoleName
 
     def verify_admin_access(self) -> bool:
-        return self.role.value == RoleName.ADMIN
+        return self.role == RoleName.ADMIN
 
     def verify_moderator_access(self) -> bool:
-        return self.role.value == RoleName.MODERATOR
+        return self.role == RoleName.MODERATOR
 
 
 @dataclass

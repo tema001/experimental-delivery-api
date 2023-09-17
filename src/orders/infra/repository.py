@@ -30,7 +30,8 @@ class OrderDataMapper:
                            order_items=[OrderItem(**x) for x in instance.data['products']],
                            total_price=instance.data.get('total_price', 0.0),
                            status=instance.order_status,
-                           created_at=instance.created_at)
+                           created_at=instance.created_at,
+                           updated_at=instance.updated_at)
 
     @staticmethod
     def entity_to_model(entity: OrderEntity):
@@ -76,15 +77,16 @@ class OrderRepository(GenericRepository):
                                     delivery_info_id=entity.delivery_info.id,
                                     order_status=entity.status,
                                     data=entity.items_as_model_data,
-                                    created_at=datetime.utcnow())
+                                    created_at=entity.created_at,
+                                    updated_at=entity.updated_at)
         await self._db.execute(stmt)
 
         await self.event_store.save(entity.events)
 
     async def change_order_data(self, entity: OrderEntity):
-        stmt = update(Order).where(Order.id == entity.id).values(data=entity.items_as_model_data)
+        stmt = update(Order).where(Order.id == entity.id).values(data=entity.items_as_model_data,
+                                                                 updated_at=entity.updated_at)
         await self._db.execute(stmt)
-
         await self.event_store.save(entity.events)
 
     async def change_delivery_info(self, entity: DeliveryInfoEntity):
@@ -97,7 +99,8 @@ class OrderRepository(GenericRepository):
     async def change_status(self, entity: OrderEntity):
         stmt = update(Order). \
             where(Order.id == entity.id). \
-            values(order_status=entity.status)
+            values(order_status=entity.status,
+                   updated_at=entity.updated_at)
         await self._db.execute(stmt)
         await self.event_store.save(entity.events)
 

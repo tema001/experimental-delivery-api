@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from uuid import UUID
 
 
@@ -10,22 +10,35 @@ class ProductResponse(BaseModel):
     price: float
 
 
-class DeliveryInfoResponse(BaseModel):
-    id: UUID
+class DeliveryAddressResponse(BaseModel):
     address: str
+
+    class Config:
+        orm_mode = True
+
+
+class UserOrderResponse(BaseModel):
+    id: UUID
+    order_status: str
+    data: dict
+    created_at: datetime
+    updated_at: datetime
+    delivery_info: DeliveryAddressResponse
+
+    class Config:
+        orm_mode = True
+
+
+class DeliveryInfoResponse(DeliveryAddressResponse):
+    id: UUID
     courier_id: UUID | None = None
 
-    class Config:
-        orm_mode = True
 
-
-class OrderResponse(BaseModel):
-    id: UUID
+class OrderResponse(UserOrderResponse):
     customer_name: str
-    data: dict
     delivery_info: DeliveryInfoResponse
-    order_status: str
-    created_at: datetime
 
-    class Config:
-        orm_mode = True
+
+class OrderPagesResponse(BaseModel):
+    orders: list[OrderResponse]
+    has_more: bool

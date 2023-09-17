@@ -39,6 +39,7 @@ class Order(Base):
     data = Column(JSON)
     order_status = Column(String)
     created_at = Column(DateTime(timezone=True))
+    updated_at = Column(DateTime(timezone=True))
 
     delivery_info = relationship('DeliveryInfo', back_populates='order', lazy="joined")
 
@@ -51,25 +52,6 @@ class OrderEvent(Base):
     name = Column(String, nullable=False)
     data = Column(JSON)
     created_at = Column(DateTime(timezone=True))
-
-
-class OrderItem(Base):
-    __tablename__ = 'order_items'
-
-    id = Column('order_item_id', Integer, primary_key=True)
-    product_id = Column(UUID, ForeignKey('products.product_id'), nullable=False)
-    order_id = Column(UUID, ForeignKey('orders.order_id'), nullable=False)
-    quantity = Column(Integer)
-    price = Column(Float)
-
-
-class OrderStatus(Base):
-    __tablename__ = 'order_statuses'
-
-    id = Column('order_status_id', Integer, primary_key=True)
-    order_id = Column(UUID, ForeignKey('orders.order_id'), nullable=False)
-    timestampz = Column(DateTime(timezone=True))
-    status = Column(String)
 
 
 class DeliveryInfo(Base):

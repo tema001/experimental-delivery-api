@@ -22,6 +22,7 @@ class OrderEntity(AggregateRoot):
     order_items: list[OrderItem]
     status: Status
     created_at: datetime
+    updated_at: datetime
     total_price: float = 0.0
 
     events: list[DomainEvent] = field(default_factory=list, compare=False)
@@ -29,6 +30,7 @@ class OrderEntity(AggregateRoot):
     @classmethod
     def create(cls, customer_name: str, address: str, items: list):
         new_id = EntityId.next_id()
+        time_now = datetime.utcnow()
         ev = [events.CreateNewOrder(new_id)]
         return cls(id=new_id,
                    customer_name=customer_name,
@@ -36,7 +38,8 @@ class OrderEntity(AggregateRoot):
                                                     address=address),
                    order_items=items,
                    status=Status.CREATED,
-                   created_at=datetime.utcnow(),
+                   created_at=time_now,
+                   updated_at=time_now,
                    events=ev)
 
     @property
@@ -47,6 +50,9 @@ class OrderEntity(AggregateRoot):
 
     def calc_total_price(self):
         self.total_price = sum((x.price * x.quantity for x in self.order_items))
+
+    def update_time(self):
+        self.updated_at = datetime.utcnow()
 
     def _is_possible_to_update(self) -> bool:
         if self.status in (Status.CANCELED, Status.DELIVERING, Status.COMPLETED):
@@ -59,6 +65,7 @@ class OrderEntity(AggregateRoot):
 
         self.order_items = new_items
         self.calc_total_price()
+        self.update_time()
         self.events.append(
             events.UpdateOrderItems(self.id, data=self.items_as_model_data)
         )
@@ -69,35 +76,29 @@ class OrderEntity(AggregateRoot):
 
         self.delivery_info.address = new_address
 
+    def _transit_status(self, new: Status, expected: Status):
+        if self.status != expected:
+            raise OrderStatusTransitionError(new, self.status, expected)
+        self.status = new
+        self.update_time()
+
     def begin(self):
         if not self.order_items or self.total_price < 1:
             raise NoItemsInOrderError
 
-        if self.status != Status.CREATED:
-            raise OrderStatusTransitionError(Status.STARTED, self.status, Status.CREATED)
-
-        self.status = Status.STARTED
+        self._transit_status(Status.STARTED, Status.CREATED)
         self.events.append(events.StartOrder(self.id))
 
     def ready(self):
-        if self.status != Status.STARTED:
-            raise OrderStatusTransitionError(Status.READY_TO_DELIVERY, self.status, Status.STARTED)
-
-        self.status = Status.READY_TO_DELIVERY
+        self._transit_status(Status.READY_TO_DELIVERY, Status.STARTED)
         self.events.append(events.ReadyToDelivery(self.id))
 
     def delivery(self):
-        if self.status != Status.READY_TO_DELIVERY:
-            raise OrderStatusTransitionError(Status.DELIVERING, self.status, Status.READY_TO_DELIVERY)
-
-        self.status = Status.DELIVERING
+        self._transit_status(Status.DELIVERING, Status.READY_TO_DELIVERY)
         self.events.append(events.Delivering(self.id))
 
     def complete(self):
-        if self.status != Status.DELIVERING:
-            raise OrderStatusTransitionError(Status.COMPLETED, self.status, Status.DELIVERING)
-
-        self.status = Status.COMPLETED
+        self._transit_status(Status.COMPLETED, Status.DELIVERING)
         self.events.append(events.CompleteOrder(self.id))
 
     def cancel(self):
@@ -105,4 +106,5 @@ class OrderEntity(AggregateRoot):
             raise
 
         self.status = Status.CANCELED
+        self.update_time()
         self.events.append(events.CancelOrder(self.id))
