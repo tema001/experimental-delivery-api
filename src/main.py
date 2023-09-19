@@ -3,9 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-from orders.router import router as order_router
-from products.router import router as product_router
-from auth.router import router as auth_router
+from api.routers.orders import router as order_router
+from api.routers.products import router as product_router
+from api.routers.auth import router as auth_router
 
 from db_config import init, engine
 

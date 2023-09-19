@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, Float, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, Float, String, Boolean, ForeignKey, DateTime, JSON, UUID
+from sqlalchemy.orm import relationship
 
 from db_config import Base
 
@@ -6,7 +7,7 @@ from db_config import Base
 class User(Base):
     __tablename__ = "users"
 
-    id = Column('user_id', Integer, primary_key=True)
+    id = Column('user_id', UUID, primary_key=True)
     username = Column(String)
     password = Column('user_password', String)
     role_id = Column(Integer)
@@ -16,54 +17,51 @@ class User(Base):
 class Product(Base):
     __tablename__ = 'products'
 
-    id = Column('product_id', Integer, primary_key=True)
+    id = Column('product_id', UUID, primary_key=True)
     product_name = Column(String)
     price = Column(Float)
-    category_id = Column(Integer, ForeignKey('categories.category_id'))
+    category_id = Column(UUID, ForeignKey('categories.category_id'))
 
 
 class Category(Base):
     __tablename__ = 'categories'
 
-    id = Column('category_id', Integer, primary_key=True)
+    id = Column('category_id', UUID, primary_key=True)
     category_name = Column(String)
 
 
 class Order(Base):
     __tablename__ = 'orders'
 
-    id = Column('order_id', Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
-    delivery_info_id = Column(Integer, ForeignKey('delivery_info.delivery_info_id'), nullable=False)
-    total_price = Column(Float)
+    id = Column('order_id', UUID, primary_key=True)
+    customer_name = Column(String, nullable=False)
+    delivery_info_id = Column(UUID, ForeignKey('delivery_info.delivery_info_id'), nullable=False)
+    data = Column(JSON)
+    order_status = Column(String)
     created_at = Column(DateTime(timezone=True))
+    updated_at = Column(DateTime(timezone=True))
+
+    delivery_info = relationship('DeliveryInfo', back_populates='order', lazy="joined")
 
 
-class OrderItem(Base):
-    __tablename__ = 'order_items'
+class OrderEvent(Base):
+    __tablename__ = 'order_events'
 
-    id = Column('order_item_id', Integer, primary_key=True)
-    product_id = Column(Integer, ForeignKey('products.product_id'), nullable=False)
-    order_id = Column(Integer, ForeignKey('orders.order_id'), nullable=False)
-    quantity = Column(Integer)
-    price = Column(Float)
-
-
-class OrderStatus(Base):
-    __tablename__ = 'order_statuses'
-
-    id = Column('order_status_id', Integer, primary_key=True)
-    order_id = Column(Integer, ForeignKey('orders.order_id'), nullable=False)
-    timestampz = Column(DateTime(timezone=True))
-    status = Column(String)
+    id = Column('order_event_id', UUID, primary_key=True)
+    order_id = Column(UUID, ForeignKey('orders.order_id'), nullable=False)
+    name = Column(String, nullable=False)
+    data = Column(JSON)
+    created_at = Column(DateTime(timezone=True))
 
 
 class DeliveryInfo(Base):
     __tablename__ = 'delivery_info'
 
-    id = Column('delivery_info_id', Integer, primary_key=True)
+    id = Column('delivery_info_id', UUID, primary_key=True)
     address = Column(String)
-    courier_id = Column(Integer, ForeignKey('users.user_id'))
+    courier_id = Column(UUID, ForeignKey('users.user_id'))
+
+    order = relationship('Order', back_populates='delivery_info')
 
 # Base.metadata.create_all(bind=engine)
 
