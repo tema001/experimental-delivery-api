@@ -56,6 +56,9 @@ class OrderCommands:
         items_hmap = {x.id: x for x in items}
         products = await self._product_repo.get_many_by_ids(items_hmap.keys())
 
+        if len(products) != len(items):
+            raise
+
         new_items = []
         for p in products:
             saved_p: OrderItemReq = items_hmap[p.id]

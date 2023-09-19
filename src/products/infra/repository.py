@@ -29,6 +29,9 @@ class ProductRepository(GenericRepository):
     def __init__(self, db: AsyncSession = Depends(get_session)):
         self._db = db
 
+    async def commit(self):
+        await self._db.commit()
+
     async def get_by_id(self, _id: int) -> ProductEntity | None:
         stmt = select(Product.id, Product.product_name, Product.price, Category.category_name) \
             .join(Category).where(Product.id == _id)
@@ -54,9 +57,6 @@ class ProductRepository(GenericRepository):
         res = res.mappings().all()
 
         return self.map_model_to_entity(res)
-
-    async def add(self, entity: Entity):
-        pass
 
     def map_model_to_entity(self, instance: Mapping | Sequence) -> ProductEntity | Sequence:
         if isinstance(instance, Sequence):

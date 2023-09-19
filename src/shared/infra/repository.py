@@ -10,5 +10,5 @@ class GenericRepository(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def add(self, entity: Entity):
+    def commit(self):
         raise NotImplementedError
